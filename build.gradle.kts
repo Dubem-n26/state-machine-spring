@@ -20,8 +20,7 @@ dependencies {
 	implementation("org.springframework.statemachine:spring-statemachine-core:2.5.0")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation ("org.jetbrains.kotlin:kotlin-stdlib")
-//	implementation("com.github.oxo42:stateless4j:2.5.0")
-//	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
