@@ -33,7 +33,7 @@ class StateMachineTest {
             stateMachine.sendEvent(Events.VALIDATE_NEXT)
             System.out.println("state " + stateMachine.state.id.toString())
         }
-        assertEquals("", stateMachine.state.id.toString(), States.VALIDATION_SUCCESS.toString())
+        assertEquals("Validation state", stateMachine.state.id.toString(), States.VALIDATION_SUCCESS.toString())
     }
 
     @Test
@@ -42,7 +42,7 @@ class StateMachineTest {
 
         stateMachine.sendEvent(Events.VALIDATE_ERROR)
         System.out.println("state " + stateMachine.state.id.toString())
-        assertEquals("", stateMachine.state.id.toString(), States.VALIDATION_FAILED.toString())
+        assertEquals("Validation state", stateMachine.state.id.toString(), States.VALIDATION_FAILED.toString())
     }
 
 }
