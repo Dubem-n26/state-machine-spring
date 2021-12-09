@@ -11,6 +11,10 @@ import org.springframework.statemachine.config.builders.StateMachineTransitionCo
 @EnableStateMachineFactory
 class StateMachineConfiguration : EnumStateMachineConfigurerAdapter<States, Events>() {
 
+    companion object {
+        const val SPACES_VALIDATED: String = "spaces"
+    }
+
     override fun configure(states: StateMachineStateConfigurer<States, Events>) {
         states
             .withStates()
@@ -49,7 +53,7 @@ class StateMachineConfiguration : EnumStateMachineConfigurerAdapter<States, Even
 
 fun finishValidation(): Action<States, Events> {
     return Action {
-        if (it.extendedState.variables["spaces"] == true) {
+        if (it.extendedState.variables[StateMachineConfiguration.SPACES_VALIDATED] == true) {
             it.stateMachine.sendEvent(Events.VALIDATE_SUCCESS)
             return@Action
         }
@@ -60,7 +64,7 @@ fun finishValidation(): Action<States, Events> {
 fun validateSpaces(): Action<States, Events> {
     //the "spaces" variable here is used as the decision whether to emit VALIDATE_ERROR or VALIDATE_SUCCESS events
     //which would transition the state to either VALIDATION_FAILED or VALIDATION_SUCCESS
-    return Action { it.extendedState.variables.put("spaces", true) }
+    return Action { it.extendedState.variables.put(StateMachineConfiguration.SPACES_VALIDATED, true) }
 }
 
 enum class States {
