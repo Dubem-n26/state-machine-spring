@@ -1,6 +1,7 @@
 package com.example.statemachine.config
 
 import org.springframework.context.annotation.Configuration
+import org.springframework.statemachine.action.Action
 import org.springframework.statemachine.config.EnableStateMachineFactory
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer
@@ -13,10 +14,7 @@ class StateMachineConfiguration : EnumStateMachineConfigurerAdapter<States, Even
     override fun configure(states: StateMachineStateConfigurer<States, Events>) {
         states
             .withStates()
-            .initial(States.VALIDATE_SPACES)
-            .state(States.VALIDATE_SPACES)
-            .state(States.VALIDATE_PACCOUNTS)
-            .state(States.VALIDATE_OVERDRAFT)
+            .initial(States.IN_VALIDATION)
             .state(States.VALIDATION_SUCCESS)
             .state(States.VALIDATION_FAILED)
             .and()
@@ -30,24 +28,39 @@ class StateMachineConfiguration : EnumStateMachineConfigurerAdapter<States, Even
     override fun configure(transitions: StateMachineTransitionConfigurer<States, Events>) {
         transitions
             .withExternal()
+            .source(States.IN_VALIDATION).target(States.VALIDATE_SPACES).event(Events.VALIDATE_NEXT)
+            .and()
+            .withLocal()
             .source(States.VALIDATE_SPACES).target(States.VALIDATE_PACCOUNTS).event(Events.VALIDATE_NEXT)
+            .action(validateSpaces())
             .and()
-            .withExternal()
+            .withLocal()
             .source(States.VALIDATE_PACCOUNTS).target(States.VALIDATE_OVERDRAFT).event(Events.VALIDATE_NEXT)
+            .action(finishValidation())
             .and()
             .withExternal()
-            .source(States.VALIDATE_OVERDRAFT).target(States.VALIDATION_SUCCESS).event(Events.VALIDATE_NEXT)
+            .source(States.IN_VALIDATION).target(States.VALIDATION_SUCCESS).event(Events.VALIDATE_SUCCESS)
             .and()
             .withExternal()
-            .source(States.VALIDATE_SPACES).target(States.VALIDATION_FAILED).event(Events.VALIDATE_ERROR)
-            .and()
-            .withExternal()
-            .source(States.VALIDATE_PACCOUNTS).target(States.VALIDATION_FAILED).event(Events.VALIDATE_ERROR)
-            .and()
-            .withExternal()
-            .source(States.VALIDATE_OVERDRAFT).target(States.VALIDATION_FAILED).event(Events.VALIDATE_ERROR)
+            .source(States.IN_VALIDATION).target(States.VALIDATION_FAILED).event(Events.VALIDATE_ERROR)
     }
 
+}
+
+fun finishValidation(): Action<States, Events> {
+    return Action {
+        if (it.extendedState.variables["spaces"] == true) {
+            it.stateMachine.sendEvent(Events.VALIDATE_SUCCESS)
+            return@Action
+        }
+        it.stateMachine.sendEvent(Events.VALIDATE_ERROR)
+    }
+}
+
+fun validateSpaces(): Action<States, Events> {
+    //the "spaces" variable here is used as the decision whether to emit VALIDATE_ERROR or VALIDATE_SUCCESS events
+    //which would transition the state to either VALIDATION_FAILED or VALIDATION_SUCCESS
+    return Action { it.extendedState.variables.put("spaces", true) }
 }
 
 enum class States {
@@ -56,5 +69,5 @@ enum class States {
 }
 
 enum class Events {
-    VALIDATE_NEXT, VALIDATE_ERROR
+    VALIDATE_NEXT, VALIDATE_ERROR, VALIDATE_SUCCESS
 }

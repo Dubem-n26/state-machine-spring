@@ -4,11 +4,11 @@ import com.example.statemachine.config.Events
 import com.example.statemachine.config.States
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertAll
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.statemachine.StateMachine
 import org.springframework.statemachine.config.StateMachineFactory
+import org.springframework.statemachine.state.StateMachineState
 import org.springframework.test.util.AssertionErrors.assertEquals
 import java.util.*
 
@@ -27,22 +27,24 @@ class StateMachineTest {
     }
 
     @Test
-    fun test_stateMachine_happyPath() {
-        System.out.println("initial state " + stateMachine.state.id.toString())
-        while (stateMachine.state.id.toString() !== States.VALIDATION_SUCCESS.toString()) {
+    fun test_stateMachine_transitions_to_VALIDATION_SUCCESS() {
+        System.out.println("initial state " + stateMachine.state)
+        val subMachineState = (stateMachine.state as StateMachineState).submachine.state
+            .id.toString()
+
+        while (stateMachine.state.isSubmachineState && subMachineState !== States.VALIDATE_OVERDRAFT.toString()) {
             stateMachine.sendEvent(Events.VALIDATE_NEXT)
-            System.out.println("state " + stateMachine.state.id.toString())
         }
-        assertEquals("Validation state", stateMachine.state.id.toString(), States.VALIDATION_SUCCESS.toString())
+        stateMachine.sendEvent(Events.VALIDATE_NEXT)
+        assertEquals("", stateMachine.state.id, States.VALIDATION_SUCCESS)
     }
 
     @Test
-    fun test_stateMachine_failure_scenario() {
+    fun test_stateMachine_still_IN_VALIDATION_state() {
         System.out.println("initial state " + stateMachine.state.id.toString())
-
-        stateMachine.sendEvent(Events.VALIDATE_ERROR)
+        stateMachine.sendEvent(Events.VALIDATE_NEXT)
         System.out.println("state " + stateMachine.state.id.toString())
-        assertEquals("Validation state", stateMachine.state.id.toString(), States.VALIDATION_FAILED.toString())
+        assertEquals("Validation state", stateMachine.state.id, States.IN_VALIDATION)
     }
 
 }
